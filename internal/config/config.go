@@ -1,4 +1,4 @@
-package configs
+package config
 
 //Services represents services config.
 type Services struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-pg/pg/v9/orm"
 	"github.com/google/uuid"
+	"github.com/go-pg/pg/v9/orm"
 )
 
 var _ orm.BeforeInsertHook = (*Customer)(nil)
@@ -41,9 +41,6 @@ type Repository interface {
 	GetByID(q string) (*Customer, error)
 	Update(c *Customer) error
 	Delete(c *Customer) error
-	//* Cache
-	StoreToCache(key string, value interface{}) error
-	GetFromCache(key string) (*Customer, error)
 }
 
 //NewCustomer init a new customer with name and address.

@@ -39,3 +39,9 @@ func (c *cacheClient) GetFromCache(key, field string) (*Customer, error) {
 	}
 	return result, nil
 }
+
+func (c *cacheClient) RemoveFromCache(key, field string) error {
+	if _, err := c.client.HDel(key, field).Result(); err != nil {
+		return err
+	}
+}

@@ -37,7 +37,7 @@ type customerService struct{
 
 //NewCustomerService init customer's service interface
 func NewCustomerService(customerRepo Repository) Service {
-	return customerService{repo: customerRepo}
+	return &customerService{repo: customerRepo}
 }
 
 func (c *customerService) Register(ctx context.Context, name, address string) error {
@@ -56,15 +56,17 @@ func (c *customerService) Register(ctx context.Context, name, address string) er
 
 }
 
-
+//TODO: Need implement
 func (c *customerService) Rent(ctx context.Context, id int) error {
 	return nil
 }
 
+//TODO: Need implement
 func (c *customerService) Buy(ctx context.Context, id int) error {
 	return nil
 }
 
+//TODO: Need implement
 func (c *customerService) Return(ctx context.Context, id int) error {
 	return nil
 }

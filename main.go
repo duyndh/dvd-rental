@@ -8,12 +8,15 @@ import (
 	"syscall"
 
 	"github.com/go-kit/kit/log"
-	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	kitprometheus "github.com/go-kit/kit/mtrics/prometheus"
 	"github.com/go-pg/pg/v9"
 	"github.com/go-redis/redis/v7"
 	"github.com/ngray1747/dvd-rental/customer"
 	"github.com/ngray1747/dvd-rental/internal/config"
+	zipkin "github.com/openzipkin/zipkin-go"
+	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -34,6 +37,30 @@ func main() {
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestamp)
 
+	var zipkinTracer *zipkin.Tracer
+	{
+		var (
+			err         error
+			hostport    = "localhost:80"
+			serviceName = "customer"
+			reporter    = zipkinhttp.NewReporter(":9411")
+		)
+		defer reporter.Close()
+		zEP, _ := zipkin.NewEndpoint(serviceName, hostPort)
+		zipkinTracer, err = zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(zEP))
+		if err != nil {
+			logger.Log("err", err)
+			os.Exit(1)
+		}
+	}
+
+	var tracer stdopentracing.Tracer
+	{
+		logger.Log("tracer", "Zipkin", "type", "Opentracing", "URL", ":9411")
+		tracer = zipkinot.Wrap(zipkinTracer)
+		zipkinTracer = nil
+	}
+	
 	//Get app config
 	cfg, err := config.Load("dev")
 	if err != nil {
@@ -82,6 +109,7 @@ func main() {
 
 	mux.Handle("/customer/v1/", customer.MakeHandler(cs, logger))
 
+	http.Handle("/", accessControl(mux))
 	http.Handle("/metrics", promhttp.Handler())
 
 	errs := make(chan error, 2)
@@ -104,11 +132,11 @@ func accessControl(h http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
-		
+
 		if r.Method == "OPTIONS" {
 			return
 		}
 
-		h.ServeHTTP(w,r)
+		h.ServeHTTP(w, r)
 	})
 }

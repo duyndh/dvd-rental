@@ -44,4 +44,5 @@ func (c *cacheClient) RemoveFromCache(key, field string) error {
 	if _, err := c.client.HDel(key, field).Result(); err != nil {
 		return err
 	}
+	return nil
 }

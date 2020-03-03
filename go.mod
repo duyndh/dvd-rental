@@ -8,5 +8,6 @@ require (
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3
+	github.com/prometheus/client_golang v1.3.0
 	gopkg.in/yaml.v2 v2.2.4
 )

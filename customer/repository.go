@@ -52,8 +52,8 @@ func (cr *customerRepository) GetByID(id string) (*Customer, error) {
 			return nil, err
 		}
 		// Set back to cache
-		if err = cr.cache.StoreToCache(cr.cfg.CacheKey, *c); err != nil {
-			return err
+		if err = cr.cache.StoreToCache(cr.cfg.CacheKey, *customer); err != nil {
+			return nil, err
 		}
 	}
 	return customer, nil
@@ -71,7 +71,7 @@ func (cr *customerRepository) Update(c *Customer) error {
 		return err
 	}
 	
-	if err := cr.cache.StoreToCache(cr.cfg.CacheKeym *c); err != nil {
+	if err := cr.cache.StoreToCache(cr.cfg.CacheKey, *c); err != nil {
 		return err
 	}
 	

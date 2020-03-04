@@ -18,6 +18,8 @@ import (
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	"github.com/go-kit/kit/tracing/opentracing"
 )
 
 func getConf(name string, services []config.Service) *config.Service {
@@ -41,7 +43,7 @@ func main() {
 	{
 		var (
 			err         error
-			hostport    = "localhost:80"
+			hostPort    = "localhost:80"
 			serviceName = "customer"
 			reporter    = zipkinhttp.NewReporter(":9411")
 		)
@@ -104,7 +106,7 @@ func main() {
 		}, fielKeys),
 		cs,
 	)
-
+	
 	mux := http.NewServeMux()
 
 	mux.Handle("/customer/v1/", customer.MakeHandler(cs, logger))

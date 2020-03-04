@@ -45,8 +45,8 @@ func NewCustomerEndpoint(cs Service, logger log.Logger, counter metrics.Counter,
 		registerEndpoint = makeRegisterEndpoint(cs)
 		registerEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerEndpoint)
 		registerEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerEndpoint)
-		registerEndpoint = opentracing.TraceServe(ot, "Register")(registerEndpoint)
-		registerEndpoint = NewLoggingSerivce(log.With(logger, "method", "register"))(registerEndpoint)
+		registerEndpoint = opentracing.TraceServer(ot, "Register")(registerEndpoint)
+		registerEndpoint = NewLoggingSerivce(log.With(logger, "method", "register"), cs)(registerEndpoint)
 		registerEndpoint = NewInstrumentService(counter, histogram, cs)(registerEndpoint)
 	}
 	return CustomerEndpoints{

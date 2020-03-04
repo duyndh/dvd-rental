@@ -1,4 +1,4 @@
-package customer 
+package customer
 
 import (
 	"context"
@@ -6,19 +6,21 @@ import (
 
 	"github.com/go-kit/kit/metrics"
 )
-
+type Middleware func(Service) Service
 type instrumentService struct {
-	counter metrics.Counter
+	counter   metrics.Counter
 	histogram metrics.Histogram
 	Service
 }
 
-func NewInstrumentService(counter metrics.Counter, histogram metrics.Histogram, s Service) Service {
-	return &instrumentService{counter: counter, histogram: histogram, Service: s}
+func NewInstrumentService(counter metrics.Counter, histogram metrics.Histogram) Middleware {
+	return func(s Service) Service {
+		return &instrumentService{counter: counter, histogram: histogram, Service: s}
+	}
 }
 
 func (is *instrumentService) Register(ctx context.Context, name, address string) error {
-	defer func(begin time.Time){
+	defer func(begin time.Time) {
 		is.counter.With("method", "register").Add(1)
 		is.histogram.With("method", "register").Observe(time.Since(begin).Seconds())
 	}(time.Now())

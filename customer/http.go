@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/gorilla/mux"
+	stdopentracing "github.com/opentracing/opentracing-go"
 )
 
 func decodeRegisterRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -50,20 +52,20 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 }
 
 //TODO: Need adding tracing to transport layout
-func MakeHandler(cs Service, logger kitlog.Logger) http.Handler {
+func MakeHandler(endpoints CustomerEndpoints, logger kitlog.Logger, ot stdopentracing.Tracer) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 		kithttp.ServerErrorEncoder(encodeError),
 	}
 
 	registerHandler := kithttp.NewServer(
-		makeRegisterEndpoint(cs),
+		endpoints.RegisterEndpoint,
 		decodeRegisterRequest,
 		encodeResponse,
-		opts...,
+		append(opts, kithttp.ServerBefore(opentracing.HTTPToContext(ot, "register", logger)))...,
 	)
 	r := mux.NewRouter()
-	
+
 	r.Handle("/customer/register", registerHandler)
 	return r
 }

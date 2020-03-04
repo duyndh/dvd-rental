@@ -3,6 +3,9 @@ package customer
 import (
 	"context"
 	"errors"
+	// "log"
+
+	// "github.com/go-kit/kit/metrics"
 )
 
 var (
@@ -26,12 +29,14 @@ func NewService(customerRepo Repository) Service {
 	var svc Service
 	{
 		svc = NewCustomerService(customerRepo)
+		// svc = NewLoggingSerivce(logger, svc)
+		// svc = NewInstrumentService(counter, histogram, svc)
 	}
 	return svc
 }
 
 //customerService implement Service interface
-type customerService struct{
+type customerService struct {
 	repo Repository
 }
 
@@ -48,7 +53,7 @@ func (c *customerService) Register(ctx context.Context, name, address string) er
 	if err != nil {
 		return err
 	}
-	
+
 	if err = c.repo.Store(customer); err != nil {
 		return err
 	}

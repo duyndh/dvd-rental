@@ -2,12 +2,21 @@ package customer
 
 import (
 	"context"
+	"time"
 
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/ratelimit"
+	"github.com/go-kit/kit/tracing/opentracing"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	"github.com/sony/gobreaker"
+	"golang.org/x/time/rate"
 )
 
 type registerRequest struct {
-	Name string `json:"name"`
+	Name    string `json:"name"`
 	Address string `json:"address"`
 }
 
@@ -22,5 +31,25 @@ func makeRegisterEndpoint(s Service) endpoint.Endpoint {
 		req := request.(registerRequest)
 		err := s.Register(ctx, req.Name, req.Address)
 		return registerResponse{Err: err}, nil
+	}
+}
+
+type CustomerEndpoints struct {
+	RegisterEndpoint endpoint.Endpoint
+}
+
+//NewCustomerEndpoint wraps all customer service with all middlewares
+func NewCustomerEndpoint(cs Service, logger log.Logger, counter metrics.Counter, histogram metrics.Histogram, ot stdopentracing.Tracer) CustomerEndpoints {
+	var registerEndpoint endpoint.Endpoint
+	{
+		registerEndpoint = makeRegisterEndpoint(cs)
+		registerEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerEndpoint)
+		registerEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerEndpoint)
+		registerEndpoint = opentracing.TraceServe(ot, "Register")(registerEndpoint)
+		registerEndpoint = NewLoggingSerivce(log.With(logger, "method", "register"))(registerEndpoint)
+		registerEndpoint = NewInstrumentService(counter, histogram, cs)(registerEndpoint)
+	}
+	return CustomerEndpoints{
+		RegisterEndpoint: registerEndpoint,
 	}
 }

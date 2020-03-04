@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
-	kitprometheus "github.com/go-kit/kit/mtrics/prometheus"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-pg/pg/v9"
 	"github.com/go-redis/redis/v7"
 	"github.com/ngray1747/dvd-rental/customer"

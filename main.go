@@ -8,18 +8,18 @@ import (
 	"syscall"
 
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
 	kitprometheus "github.com/go-kit/kit/mtrics/prometheus"
 	"github.com/go-pg/pg/v9"
 	"github.com/go-redis/redis/v7"
 	"github.com/ngray1747/dvd-rental/customer"
 	"github.com/ngray1747/dvd-rental/internal/config"
+	stdopentracing "github.com/opentracing/opentracing-go"
+	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
 	zipkin "github.com/openzipkin/zipkin-go"
 	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	"github.com/go-kit/kit/tracing/opentracing"
 )
 
 func getConf(name string, services []config.Service) *config.Service {
@@ -62,7 +62,7 @@ func main() {
 		tracer = zipkinot.Wrap(zipkinTracer)
 		zipkinTracer = nil
 	}
-	
+
 	//Get app config
 	cfg, err := config.Load("dev")
 	if err != nil {
@@ -86,27 +86,29 @@ func main() {
 	defer db.Close()
 
 	fielKeys := []string{"method"}
-
-	customerRepo := customer.NewCustomerRepository(db, cacheRepo)
-	var cs customer.Service
-	cs = customer.NewService(customerRepo)
-	cs = customer.NewLoggingSerivce(log.With(logger, "service", "customer"), cs)
-	cs = customer.NewInstrumentService(
-		kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-			Namespace: "api",
-			Subsystem: "customer_service",
-			Name:      "request_count",
-			Help:      "Number of requests received",
-		}, fielKeys),
-		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+	var historgram metrics.Histogram
+	{
+		historgram = kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: "api",
 			Subsystem: "customer_service",
 			Name:      "request_latency_microseconds",
 			Help:      "Request duration",
-		}, fielKeys),
-		cs,
-	)
-	
+		}, fielKeys)
+	}
+	var counter metrics.Counter
+	{
+		counter = kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: "api",
+			Subsystem: "customer_service",
+			Name:      "request_count",
+			Help:      "Number of requests received",
+		}, fielKeys)
+	}
+	customerRepo := customer.NewCustomerRepository(db, cacheRepo)
+	var cs customer.Service
+	cs = customer.NewService(customerRepo)
+	customerEndpoint = customer.NewCustomerEndpoint(cs, logger, counter, histogram, tracer)
+
 	mux := http.NewServeMux()
 
 	mux.Handle("/customer/v1/", customer.MakeHandler(cs, logger))

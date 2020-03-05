@@ -106,12 +106,12 @@ func main() {
 	}
 	customerRepo := customer.NewCustomerRepository(db, cacheRepo)
 	var cs customer.Service
-	cs = customer.NewService(customerRepo)
-	customerEndpoint = customer.NewCustomerEndpoint(cs, logger, counter, histogram, tracer)
-
+	cs = customer.NewService(customerRepo,logger, counter, historgram)
+	customerEndpoint := customer.NewCustomerEndpoint(cs, logger, counter, historgram, tracer)
+	// customerHandler = customer.NewHTTPHadne
 	mux := http.NewServeMux()
 
-	mux.Handle("/customer/v1/", customer.MakeHandler(cs, logger))
+	mux.Handle("/customer/v1/", customer.MakeHandler(customerEndpoint, logger, tracer))
 
 	http.Handle("/", accessControl(mux))
 	http.Handle("/metrics", promhttp.Handler())

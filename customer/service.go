@@ -3,9 +3,9 @@ package customer
 import (
 	"context"
 	"errors"
-	// "log"
 
-	// "github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
 )
 
 var (
@@ -17,20 +17,20 @@ type Service interface {
 	//Register customer
 	Register(ctx context.Context, name, address string) error
 	//Customer rent a dvd
-	Rent(ctx context.Context, id int) error
+	// Rent(ctx context.Context, id int) error
 	//Customer buys a dvd
-	Buy(ctx context.Context, id int) error
+	// Buy(ctx context.Context, id int) error
 	//Customer returns borrowed dvd
-	Return(ctx context.Context, id int) error
+	// Return(ctx context.Context, id int) error
 }
 
 //NewService return customerService with all expected function
-func NewService(customerRepo Repository) Service {
+func NewService(customerRepo Repository, logger log.Logger, counter metrics.Counter, histogram metrics.Histogram) Service {
 	var svc Service
 	{
 		svc = NewCustomerService(customerRepo)
-		// svc = NewLoggingSerivce(logger, svc)
-		// svc = NewInstrumentService(counter, histogram, svc)
+		svc = NewLoggingService(logger)(svc)
+		svc = NewInstrumentService(counter, histogram)(svc)
 	}
 	return svc
 }
@@ -61,17 +61,17 @@ func (c *customerService) Register(ctx context.Context, name, address string) er
 
 }
 
-//TODO: Need implement
-func (c *customerService) Rent(ctx context.Context, id int) error {
-	return nil
-}
+// //TODO: Need implement
+// func (c *customerService) Rent(ctx context.Context, id int) error {
+// 	return nil
+// }
 
-//TODO: Need implement
-func (c *customerService) Buy(ctx context.Context, id int) error {
-	return nil
-}
+// //TODO: Need implement
+// func (c *customerService) Buy(ctx context.Context, id int) error {
+// 	return nil
+// }
 
-//TODO: Need implement
-func (c *customerService) Return(ctx context.Context, id int) error {
-	return nil
-}
+// //TODO: Need implement
+// func (c *customerService) Return(ctx context.Context, id int) error {
+// 	return nil
+// }

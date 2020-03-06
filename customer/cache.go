@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/vmihailenco/msgpack"
 )
 
 var errNilResult = errors.New("nil value")
@@ -19,11 +20,12 @@ func NewCacheClient(cli *redis.Client) Cache {
 }
 
 func (c *cacheClient) StoreToCache(key string, customer Customer) error {
-	encodeValue, err := json.Marshal(customer)
+	bytes, err := msgpack.Marshal(customer)
 	if err != nil {
 		return err
 	}
-	return c.client.HSet(key, customer.ID, encodeValue).Err()
+	// _, err = 
+	return  c.client.HSet(key, customer.ID, bytes).Err()
 }
 
 func (c *cacheClient) GetFromCache(key, field string) (*Customer, error) {

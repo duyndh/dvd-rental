@@ -66,6 +66,6 @@ func MakeHandler(endpoints CustomerEndpoints, logger kitlog.Logger, ot stdopentr
 	)
 	r := mux.NewRouter()
 
-	r.Handle("/customer/register", registerHandler)
+	r.Handle("/customer/v1/register", registerHandler)
 	return r
 }

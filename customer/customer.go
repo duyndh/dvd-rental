@@ -27,7 +27,7 @@ func (c *Customer) BeforeUpdate(ctx context.Context) (context.Context, error) {
 
 //Customer represents the customer model
 type Customer struct {
-	ID        string `pg:type:uuid`
+	ID        string
 	Name      string `pg:",notnull"`
 	Address   string `pg:",notnull"`
 	CreatedAt time.Time

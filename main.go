@@ -45,7 +45,7 @@ func main() {
 			err         error
 			hostPort    = "localhost:80"
 			serviceName = "customer"
-			reporter    = zipkinhttp.NewReporter(":9411")
+			reporter    = zipkinhttp.NewReporter("http://localhost:9411/api/v2/spans")
 		)
 		defer reporter.Close()
 		zEP, _ := zipkin.NewEndpoint(serviceName, hostPort)
@@ -85,7 +85,6 @@ func main() {
 	db := pg.Connect(pgConnectionString)
 	defer db.Close()
 
-	fielKeys := []string{"method"}
 	var historgram metrics.Histogram
 	{
 		historgram = kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
@@ -93,7 +92,7 @@ func main() {
 			Subsystem: "customer_service",
 			Name:      "request_latency_microseconds",
 			Help:      "Request duration",
-		}, fielKeys)
+		}, []string{"method", "success"})
 	}
 	var counter metrics.Counter
 	{
@@ -102,12 +101,12 @@ func main() {
 			Subsystem: "customer_service",
 			Name:      "request_count",
 			Help:      "Number of requests received",
-		}, fielKeys)
+		}, []string{"method"})
 	}
-	customerRepo := customer.NewCustomerRepository(db, cacheRepo)
+	customerRepo := customer.NewCustomerRepository(customerCfg.Cache, db, cacheRepo)
 	var cs customer.Service
-	cs = customer.NewService(customerRepo,logger, counter, historgram)
-	customerEndpoint := customer.NewCustomerEndpoint(cs, logger, counter, historgram, tracer)
+	cs = customer.NewService(customerRepo, logger, counter, historgram)
+	customerEndpoint := customer.NewCustomerEndpoint(cs, tracer)
 	// customerHandler = customer.NewHTTPHadne
 	mux := http.NewServeMux()
 

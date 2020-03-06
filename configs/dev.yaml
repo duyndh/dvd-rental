@@ -3,8 +3,8 @@ services:
   database:
     dbName: dvd_rental
     timeout: 10
-    psn: postgres://my_user:password123:localhost:5432/dvd_rental?sslmode=disable
+    psn: postgres://my_user:password123@localhost:5432/dvd_rental?sslmode=disable
   cache:
     addr: localhost:6379
-    password: "my_password"
+    password:
     cacheKey: customers

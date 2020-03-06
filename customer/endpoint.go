@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
+	// "github.com/go-kit/kit/log"
+	// "github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	stdopentracing "github.com/opentracing/opentracing-go"
@@ -39,15 +39,15 @@ type CustomerEndpoints struct {
 }
 
 //NewCustomerEndpoint wraps all customer service with all middlewares
-func NewCustomerEndpoint(cs Service, logger log.Logger, counter metrics.Counter, histogram metrics.Histogram, ot stdopentracing.Tracer) CustomerEndpoints {
+func NewCustomerEndpoint(cs Service, ot stdopentracing.Tracer) CustomerEndpoints {
 	var registerEndpoint endpoint.Endpoint
 	{
 		registerEndpoint = makeRegisterEndpoint(cs)
 		registerEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerEndpoint)
 		registerEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerEndpoint)
 		registerEndpoint = opentracing.TraceServer(ot, "Register")(registerEndpoint)
-		registerEndpoint = LoggingMiddleware(log.With(logger, "method", "register"))(registerEndpoint)
-		registerEndpoint = InstrumentingMiddleware(counter, histogram)(registerEndpoint)
+		// registerEndpoint = LoggingMiddleware(log.With(logger, "method", "register"))(registerEndpoint)
+		// registerEndpoint = InstrumentingMiddleware(counter, histogram)(registerEndpoint)
 	}
 	return CustomerEndpoints{
 		RegisterEndpoint: registerEndpoint,

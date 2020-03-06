@@ -1,6 +1,7 @@
 package customer
 
 import (
+	"fmt"
 	"context"
 	"time"
 
@@ -43,9 +44,10 @@ func NewInstrumentService(counter metrics.Counter, histogram metrics.Histogram) 
 }
 
 func (is *instrumentService) Register(ctx context.Context, name, address string) error {
+	err := is.Service.Register(ctx, name, address)
 	defer func(begin time.Time) {
 		is.counter.With("method", "register").Add(1)
-		is.histogram.With("method", "register").Observe(time.Since(begin).Seconds())
+		is.histogram.With("method", "register", "success",  fmt.Sprint(err == nil)).Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return is.Service.Register(ctx, name, address)
+	return err
 }

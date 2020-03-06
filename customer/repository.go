@@ -19,8 +19,8 @@ type customerRepository struct {
 }
 
 //NewCustomerRepository create a new customer repository.
-func NewCustomerRepository(db *pg.DB, cache Cache) Repository {
-	return &customerRepository{db: db, cache: cache}
+func NewCustomerRepository(cfg *config.Cache, db *pg.DB, cache Cache) Repository {
+	return &customerRepository{cfg: cfg, db: db, cache: cache}
 }
 
 func (cr *customerRepository) Store(c *Customer) error {
@@ -37,7 +37,7 @@ func (cr *customerRepository) Store(c *Customer) error {
 	if err := cr.cache.StoreToCache(cr.cfg.CacheKey, *c); err != nil {
 		return err
 	}
-	return nil
+	return tx.Commit()
 }
 
 func (cr *customerRepository) GetByID(id string) (*Customer, error) {
@@ -45,7 +45,7 @@ func (cr *customerRepository) GetByID(id string) (*Customer, error) {
 	customer, err := cr.cache.GetFromCache(cr.cfg.CacheKey, id)
 	if err != nil && err != redis.Nil {
 		return nil, err
-	}else if err == redis.Nil {
+	} else if err == redis.Nil {
 		customer = &Customer{ID: id}
 		// Get from database
 		if err := cr.db.Select(customer); err != nil {
@@ -70,11 +70,11 @@ func (cr *customerRepository) Update(c *Customer) error {
 	if err := tx.Update(c); err != nil {
 		return err
 	}
-	
+
 	if err := cr.cache.StoreToCache(cr.cfg.CacheKey, *c); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -89,10 +89,10 @@ func (cr *customerRepository) Delete(c *Customer) error {
 	if err := tx.Delete(c); err != nil {
 		return err
 	}
-	
+
 	if err := cr.cache.RemoveFromCache(cr.cfg.CacheKey, c.ID); err != nil {
 		return err
 	}
-	
+
 	return nil
 }

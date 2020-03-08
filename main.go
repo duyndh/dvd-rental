@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -35,17 +36,33 @@ func getConf(name string, services []config.Service) *config.Service {
 }
 
 func main() {
+	fs := flag.NewFlagSet("dvd_rental", flag.ExitOnError)
+	var (
+		httpAddr      = fs.String("httpAddr", ":9999", "Http server address")
+		zipkinAddr    = fs.String("zipkinAddr", "", "Zipkin tracer address")
+		dbUserName    = fs.String("dbUserName", "my-user", "Postgresql username")
+		dbPassword    = fs.String("dbPassword", "password123", "Postgresql password")
+		dbAddr        = fs.String("dbHost", "", "Postgresql host")
+		redisAddr     = fs.String("redisAddr", "", "Redis cache address")
+		redisPassword = fs.String("redisPassword", "", "Redis cache password")
+	)
+	fs.Parse(os.Args[1:])
+
 	var logger log.Logger
 	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestamp)
 
+	if *zipkinAddr == "" {
+		panic("Zipkin configuration required")
+	}
 	var zipkinTracer *zipkin.Tracer
 	{
 		var (
 			err         error
 			hostPort    = "localhost:80"
 			serviceName = "customer"
-			reporter    = zipkinhttp.NewReporter("http://localhost:9411/api/v2/spans")
+			zipkinURL   = fmt.Sprintf("http://%s/api/v2/spans", *zipkinAddr)
+			reporter    = zipkinhttp.NewReporter(zipkinURL)
 		)
 		defer reporter.Close()
 		zEP, _ := zipkin.NewEndpoint(serviceName, hostPort)
@@ -70,19 +87,26 @@ func main() {
 	}
 
 	//Get Customer configuration
+	if *redisAddr == "" {
+		panic("Redis configuration required")
+	}
 	customerCfg := getConf("customer", cfg.Services)
 	cacheCli := redis.NewClient(&redis.Options{
-		Addr:     customerCfg.Cache.Addr,
-		Password: customerCfg.Cache.Password,
+		Addr:     *redisAddr,
+		Password: *redisPassword,
 		DB:       0,
 	})
 	defer cacheCli.Close()
-	cacheRepo := customer.NewCacheClient(cacheCli)
-	pgConnectionString, err := pg.ParseURL(customerCfg.Database.PSN)
-	if err != nil {
-		panic(err)
+	if *dbAddr == "" || *dbUserName == "" || *dbPassword == "" {
+		panic("Database configuration required")
 	}
-	db := pg.Connect(pgConnectionString)
+	cacheRepo := customer.NewCacheClient(cacheCli)
+	db := pg.Connect(&pg.Options{
+		Addr:     *dbAddr,
+		User:     *dbUserName,
+		Password: *dbPassword,
+		Database: customerCfg.Database.DBName,
+	})
 	defer db.Close()
 
 	var historgram metrics.Histogram
@@ -118,8 +142,8 @@ func main() {
 	errs := make(chan error, 2)
 
 	go func() {
-		logger.Log("transport", "http", "address", "localhost:9999", "msg", "listening")
-		errs <- http.ListenAndServe("localhost:9999", nil)
+		logger.Log("transport", "http", "address", ":9999", "msg", "listening")
+		errs <- http.ListenAndServe(*httpAddr, nil)
 	}()
 	go func() {
 		c := make(chan os.Signal)

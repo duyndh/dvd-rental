@@ -1,12 +1,9 @@
 package config
 
 import (
-	"os"
-	"fmt"
-	"io/ioutil"
-
-	yaml "gopkg.in/yaml.v2"
+	"github.com/spf13/viper"
 )
+
 //Services represents services config.
 type Service struct {
 	Name     string    `yaml:"name,omitempty"`
@@ -27,32 +24,26 @@ type Cache struct {
 	Password string `yaml:"password,omitempty"`
 	CacheKey string `yaml:"cacheKey,omitempty"`
 }
+
 //Configuration represent app config
 type Configuration struct {
 	Services []Service `yaml:"services,omitempty"`
 }
 
-//loadConfig loads config from yaml file.
-func loadConfig(path string) (*Configuration, error) {
-	file, err := os.Open(path)
+//Load loads configured environment
+func Load(env string) (*Configuration, error) {
+	viper.SetConfigName(env)
+	viper.SetConfigType("yml")
+	viper.AddConfigPath("./internal/config")
+	viper.AutomaticEnv()
+	var cfg = new(Configuration)
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, err
+	}
+	err := viper.Unmarshal(cfg)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config file, %s", err)
-	}
-	var cfg = new(Configuration)
-	if err := yaml.Unmarshal(bytes, cfg); err != nil {
-		return nil, fmt.Errorf("unable to decode into struct, %v", err)
-	}
 	return cfg, nil
-}
-
-//Load loads configured environment
-func Load(env string) (*Configuration, error) {
-	path := fmt.Sprintf("./configs/%s.yaml", env)
-	return loadConfig(path)
 }

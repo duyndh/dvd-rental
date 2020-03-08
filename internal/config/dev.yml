@@ -1,0 +1,7 @@
+services:
+- name: customer
+  database:
+    dbName: dvd_rental
+    timeout: 10
+  cache:
+    cacheKey: customers

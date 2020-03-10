@@ -54,7 +54,7 @@ func (c *customerService) Register(ctx context.Context, name, address string) er
 		return err
 	}
 
-	if err = c.repo.Store(customer); err != nil {
+	if err := c.repo.Store(customer); err != nil {
 		return err
 	}
 	return nil

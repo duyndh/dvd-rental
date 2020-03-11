@@ -14,6 +14,8 @@ import (
 	"github.com/go-pg/pg/v9"
 	"github.com/go-redis/redis/v7"
 	"github.com/ngray1747/dvd-rental/customer"
+	"github.com/ngray1747/dvd-rental/customer/cache"
+	"github.com/ngray1747/dvd-rental/customer/database"
 	"github.com/ngray1747/dvd-rental/internal/config"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
@@ -100,7 +102,7 @@ func main() {
 	if *dbAddr == "" || *dbUserName == "" || *dbPassword == "" {
 		panic("Database configuration required")
 	}
-	cacheRepo := customer.NewCacheClient(cacheCli)
+	cacheRepo := cache.NewCacheClient(cacheCli)
 	db := pg.Connect(&pg.Options{
 		Addr:     *dbAddr,
 		User:     *dbUserName,
@@ -127,7 +129,7 @@ func main() {
 			Help:      "Number of requests received",
 		}, []string{"method"})
 	}
-	customerRepo := customer.NewCustomerRepository(customerCfg.Cache, db, cacheRepo)
+	customerRepo := database.NewCustomerRepository(customerCfg.Cache, db, cacheRepo)
 	var cs customer.Service
 	cs = customer.NewService(customerRepo, logger, counter, historgram)
 	customerEndpoint := customer.NewCustomerEndpoint(cs, tracer)

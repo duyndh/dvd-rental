@@ -51,7 +51,6 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 	return json.NewEncoder(w).Encode(response)
 }
 
-//TODO: Need adding tracing to transport layout
 func MakeHandler(endpoints CustomerEndpoints, logger kitlog.Logger, ot stdopentracing.Tracer) http.Handler {
 	opts := []kithttp.ServerOption{
 		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package dvd;
+
+service DVDRental {
+    rpc CreateDVD (CreateDVDRequest) returns (CreateDVDResponse);
+    // rpc RentDVD (RentDVDRequest) returns (RenDVDResponse);
+    // rpc ReturnsDVD (ReturnsDVDRequest) returns (ReturnsDVDResponse);
+}
+
+message CreateDVDRequest {
+    string name = 1;
+    uint32 status = 2;
+}
+
+message CreateDVDResponse {
+}

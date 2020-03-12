@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package dvd;
+package pb;
 
 service DVDRental {
     rpc CreateDVD (CreateDVDRequest) returns (CreateDVDResponse);
@@ -10,8 +10,8 @@ service DVDRental {
 
 message CreateDVDRequest {
     string name = 1;
-    uint32 status = 2;
 }
 
 message CreateDVDResponse {
+    string err = 1;
 }

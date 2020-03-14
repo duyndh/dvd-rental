@@ -1,10 +1,7 @@
 package dvd
 
 import (
-	"time"
-
 	"github.com/google/uuid"
-	"github.com/go-pg/pg/v9/orm"
 	"github.com/ngray1747/dvd-rental/internal/model"
 )
 
@@ -17,7 +14,7 @@ const (
 
 var Statuss = []Status {
 	Available,
-	NotAvailable
+	NotAvailable,
 }
 
 func (s Status) ToString() string {
@@ -49,7 +46,10 @@ func NewDVD(name string) (*DVD, error) {
 	}
 
 	return &DVD{
-		ID:      id.String(),
+		Base: model.Base{
+			ID: id.String(),
+		},
+		// ID:      id.String(),
 		Name:    name,
 		Status: Available,
 	}, nil

@@ -1,7 +1,13 @@
 services:
 - name: customer
   database:
-    dbName: dvd_rental
+    dbName: dvd_rental_dvd
     timeout: 10
   cache:
     cacheKey: customers
+- name: dvd
+  database:
+    dbName: dvd_rental_dvd
+    timeout: 10
+  cache:
+    cacheKey: dvds

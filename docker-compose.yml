@@ -20,7 +20,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
     depends_on: 
       - db
-  dvd_rental:
+  dvd_rental_customer:
     # image: dvd_rental:latest
     build: 
       args: 
@@ -31,13 +31,40 @@ services:
         - POSTGRESQL_USERNAME=my_user
         - POSTGRESQL_PASSWORD=password123
         - ZIPKIN_URL=zipkin:9411
+        - SERVICE=customer
+        - NAMESPAce=api
       context: .
       dockerfile: Dockerfile
     # restart: always
     volumes: 
-      - ./:/dvd_rental
+      - ./:/dvd_rental_customer
     ports: 
       - "9999:9999"
+    networks: 
+      - dvd_rental_network
+    depends_on: 
+      - db
+      - redis
+  dvd_rental_dvd:
+    # image: dvd_rental:latest
+    build: 
+      args: 
+        # - HTTP_ADDR=localhost:9999
+        - REDIS_URL=redis:6379
+        # - REDIS_PASSWORD=
+        - POSTGRESQL_URL=db:5432
+        - POSTGRESQL_USERNAME=my_user
+        - POSTGRESQL_PASSWORD=password123
+        - ZIPKIN_URL=zipkin:9411
+        - SERVICE=dvd
+        - NAMESPAce=srv
+      context: .
+      dockerfile: Dockerfile
+    # restart: always
+    volumes: 
+      - ./:/dvd_rental_dvd
+    ports: 
+      - "8888:8888"
     networks: 
       - dvd_rental_network
     depends_on: 
@@ -50,7 +77,7 @@ services:
     ports: 
       - "9411"
     depends_on: 
-      - dvd_rental
+      - dvd_rental_customer
   prometheus:
     image: prom/prometheus
     ports: 
@@ -63,7 +90,7 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--web.enable-lifecycle'
     depends_on: 
-      - dvd_rental
+      - dvd_rental_customer
     environment: 
       - DVD_RENTAL_URL=dvd_rental:9999
 

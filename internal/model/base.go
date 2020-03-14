@@ -9,7 +9,7 @@ import (
 
 // Base contains common fields for all tables
 type Base struct {
-	ID        int       `pg:",pk" json:"id,omitempty"`
+	ID        string       `pg:",pk" json:"id,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	DeletedAt time.Time `pg:",soft_delete"json:"deleted_at,omitempty"`

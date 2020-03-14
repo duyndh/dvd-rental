@@ -7,7 +7,7 @@ import (
 	"github.com/go-redis/redis/v7"
 	"github.com/vmihailenco/msgpack"
 	"github.com/ngray1747/dvd-rental/customer"
-	"github.com/ngray1747/dvd-rental/customer/database"
+	"github.com/ngray1747/dvd-rental/customer/repository"
 )
 
 var errNilResult = errors.New("nil value")
@@ -17,7 +17,7 @@ type cacheClient struct {
 }
 
 //NewCacheClient init a new cache client
-func NewCacheClient(cli *redis.Client) database.Cache {
+func NewCacheClient(cli *redis.Client) repository.Cache {
 	return &cacheClient{client: cli}
 }
 

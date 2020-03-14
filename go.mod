@@ -10,6 +10,7 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/go-pg/pg/v9 v9.1.3
 	github.com/go-redis/redis/v7 v7.2.0
+	github.com/golang/protobuf v1.3.3
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3
 	github.com/lib/pq v1.3.0 // indirect
@@ -25,4 +26,5 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
+	google.golang.org/grpc v1.26.0
 )

@@ -86,7 +86,7 @@ func TestMain(m *testing.M) {
 
 func TestStore(t *testing.T) {
 	cacheCli := cache.NewCacheClient(cacheClient)
-	repo := database.NewCustomerRepository(cacheConfig, db, cacheCli)
+	repo := repository.NewCustomerRepository(cacheConfig, db, cacheCli)
 	type args struct {
 		customer *customer.Customer
 	}

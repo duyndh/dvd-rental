@@ -26,7 +26,7 @@ func (lm *loggerMiddleware) CreateDVD(ctx context.Context, name string) (err err
 	defer func(begin time.Time) {
 		lm.logger.Log("method", "CreateDVD", "request_name", name, "error", err, "took", time.Since(begin))
 	}(time.Now())
-	return lm.CreateDVD(ctx, name)
+	return lm.svc.CreateDVD(ctx, name)
 }
 
 type metricMiddleware struct {

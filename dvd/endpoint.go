@@ -36,7 +36,15 @@ func makeCreateDVDEndpoint(s Service) endpoint.Endpoint {
 type DVDEndpoints struct {
 	CreateDVDEndpoint endpoint.Endpoint
 }
+func (ep DVDEndpoints) CreateDVD(ctx context.Context, name string) error {
+	res, err := ep.CreateDVDEndpoint(ctx, CreateDVDRequest{Name: name})
+	if err != nil {
+		return err
+	}
+	response := res.(CreateDVDResponse)
+	return response.Err
 
+}
 func NewDVDEndpoint(svc Service, ot stdopentracing.Tracer) DVDEndpoints {
 	var createDVDEndpoint endpoint.Endpoint
 	{

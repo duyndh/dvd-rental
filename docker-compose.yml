@@ -32,7 +32,7 @@ services:
         - POSTGRESQL_PASSWORD=password123
         - ZIPKIN_URL=zipkin:9411
         - SERVICE=customer
-        - NAMESPAce=api
+        - NAMESPACE=api
       context: .
       dockerfile: Dockerfile
     # restart: always
@@ -57,7 +57,7 @@ services:
         - POSTGRESQL_PASSWORD=password123
         - ZIPKIN_URL=zipkin:9411
         - SERVICE=dvd
-        - NAMESPAce=srv
+        - NAMESPACE=srv
       context: .
       dockerfile: Dockerfile
     # restart: always

@@ -173,7 +173,7 @@ func main() {
 		defer db.Close()
 		repo := dvdRepo.NewDVDRepository(svcCfg.Cache, db, cacheRepo)
 		var dvdSrv dvd.Service
-		dvdSrv = dvd.NewDVDService(repo)
+		dvdSrv = dvd.NewService(repo, logger, counter, historgram)
 		dvdEndpoint := dvd.NewDVDEndpoint(dvdSrv, tracer)
 		dvdGRPCServer := dvd.NewGRPCServer(dvdEndpoint, tracer, logger)
 

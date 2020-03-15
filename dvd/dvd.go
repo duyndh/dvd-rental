@@ -49,7 +49,6 @@ func NewDVD(name string) (*DVD, error) {
 		Base: model.Base{
 			ID: id.String(),
 		},
-		// ID:      id.String(),
 		Name:    name,
 		Status: Available,
 	}, nil

@@ -174,7 +174,7 @@ func main() {
 			os.Exit(1)
 		}
 		cacheRepo := dvdCache.NewCacheClient(cacheCli)
-		
+
 		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{dvd.DVD{},})
 		if err != nil {
 			logger.Log("init Db error: ", err)
@@ -264,6 +264,7 @@ func initDB(addr, username, password, database string, models []interface{}) (*p
 		fmt.Printf("Creating model:%+v ... \n", model)
 		if err := db.CreateTable(model, &orm.CreateTableOptions{
 			FKConstraints: true,
+			IfNotExists: true,
 		}); err != nil {
 			return nil, err
 		}

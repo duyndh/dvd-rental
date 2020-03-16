@@ -16,6 +16,7 @@ import (
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/go-pg/pg/v9"
+	"github.com/go-pg/pg/v9/orm"
 	"github.com/go-redis/redis/v7"
 	"github.com/ngray1747/dvd-rental/customer"
 	customerCache "github.com/ngray1747/dvd-rental/customer/cache"
@@ -150,7 +151,11 @@ func main() {
 		}
 		cacheRepo := customerCache.NewCacheClient(cacheCli)
 
-		db := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName)
+		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{customer.Customer{},})
+		if err != nil {
+			logger.Log("init Db error: ", err)
+			os.Exit(1)
+		}
 		defer db.Close()
 		repo := customerRepo.NewCustomerRepository(svcCfg.Cache, db, cacheRepo)
 
@@ -169,8 +174,14 @@ func main() {
 			os.Exit(1)
 		}
 		cacheRepo := dvdCache.NewCacheClient(cacheCli)
-		db := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName)
+		
+		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{dvd.DVD{},})
+		if err != nil {
+			logger.Log("init Db error: ", err)
+			os.Exit(1)
+		}
 		defer db.Close()
+
 		repo := dvdRepo.NewDVDRepository(svcCfg.Cache, db, cacheRepo)
 		var dvdSrv dvd.Service
 		dvdSrv = dvd.NewService(repo, logger, counter, historgram)
@@ -224,11 +235,39 @@ func accessControl(h http.Handler) http.Handler {
 	})
 }
 
-func initDB(addr, username, password, database string) *pg.DB {
-	return pg.Connect(&pg.Options{
+func initDB(addr, username, password, database string, models []interface{}) (*pg.DB, error) {
+
+	db :=  pg.Connect(&pg.Options{
 		Addr:     addr,
 		User:     username,
 		Password: password,
 		Database: database,
 	})
+
+	query := fmt.Sprintf(`SELECT 1 FROM pg_database WHERE datname = '%s';`, database)
+	result, err := db.Exec(query)
+	if err != nil || result == nil {
+		return nil, err
+	}
+
+	if result.RowsAffected() == 0 {
+		fmt.Printf("Database \"%s\" is creating...\n", database)
+		query := fmt.Sprintf(`CREATE DATABASE %s;`, database)
+		_, err := db.Exec(query)
+		if err != nil {
+			return nil, err
+		}
+	}
+	fmt.Println("Database already existed. Abort migration")
+
+	for _, model := range models {
+		fmt.Printf("Creating model:%+v ... \n", model)
+		if err := db.CreateTable(model, &orm.CreateTableOptions{
+			FKConstraints: true,
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	return db, nil
 }

@@ -1,11 +1,6 @@
 SERVICE_NAME := customer
 IMAGE_NAME := ndhduy7798/dvd_rental_$(SERVICE_NAME)
-REDIS_URL := localhost:6379
-POSTGRESQL_URL := localhost:5432
-POSTGRESQL_USERNAME := password123
-ZIPKIN_URL := localhost:9411
-SERVICE := customer
-NAMESPACE := api
+
 
 #* Build
 build:

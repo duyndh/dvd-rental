@@ -8,10 +8,8 @@ SERVICE := customer
 NAMESPACE := api
 
 #* Build
-
 build:
 	@echo "--> Buildding image"
-	@echo $(TESTING)
 	docker build . -t $(IMAGE_NAME):latest /
 	--build-arg REDIS_URL=$(REDIS_URL) --build-arg POSTGRESQL_URL=$(POSTGRESQL_URL) /
 	--build-arg POSTGRESQL_USERNAME=$(POSTGRESQL_USERNAME)/
@@ -22,6 +20,7 @@ build:
 build-go:
 	@echo "--> Building go"
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./build/main main.go	
+
 #! Testing
 test:
 	@echo "--> Testing All Services"
@@ -29,7 +28,21 @@ test:
 test-customer:
 	@echo "--> Testing Customer"
 	go test ./customer/...
+test-dvd:
+	@echo "--> Testing Customer"
+	go test ./dvd/...
+
 #* Publish
 publish-latest:
 	@echo "Publishing image"
 	docker push $(IMAGE_NAME):latest
+
+#* Docker-compose
+up:
+	docker-compose up -d --build
+down:
+	docker-compose down
+stop:
+	docker-compose stop
+start:
+	docker-compose start

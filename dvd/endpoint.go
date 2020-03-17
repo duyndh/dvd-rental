@@ -35,7 +35,9 @@ func makeCreateDVDEndpoint(s Service) endpoint.Endpoint {
 
 type DVDEndpoints struct {
 	CreateDVDEndpoint endpoint.Endpoint
+	RentDVDEndpoint   endpoint.Endpoint
 }
+
 func (ep DVDEndpoints) CreateDVD(ctx context.Context, name string) error {
 	res, err := ep.CreateDVDEndpoint(ctx, CreateDVDRequest{Name: name})
 	if err != nil {
@@ -45,6 +47,35 @@ func (ep DVDEndpoints) CreateDVD(ctx context.Context, name string) error {
 	return response.Err
 
 }
+
+type RentDVDRequest struct {
+	ID string `json:"id"`
+}
+
+type RentDVDResponse struct {
+	Err error `json:"error,omitempty"`
+}
+
+func (r RentDVDResponse) error() error {
+	return r.Err
+}
+
+func (ep DVDEndpoints) RentDVD(ctx context.Context, id string) error {
+	res, err := ep.RentDVDEndpoint(ctx, RentDVDRequest{ID: id})
+	if err != nil {
+		return err
+	}
+	response := res.(RentDVDResponse)
+	return response.Err
+}
+
+func makeRentDVDEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(RentDVDRequest)
+		err := s.RentDVD(ctx, req.ID)
+		return RentDVDResponse{Err: err}, nil
+	}
+}
 func NewDVDEndpoint(svc Service, ot stdopentracing.Tracer) DVDEndpoints {
 	var createDVDEndpoint endpoint.Endpoint
 	{
@@ -53,7 +84,16 @@ func NewDVDEndpoint(svc Service, ot stdopentracing.Tracer) DVDEndpoints {
 		createDVDEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(createDVDEndpoint)
 		createDVDEndpoint = opentracing.TraceServer(ot, "create_dvd")(createDVDEndpoint)
 	}
+
+	var rentDVDEndpoint endpoint.Endpoint
+	{
+		rentDVDEndpoint = makeRentDVDEndpoint(svc)
+		rentDVDEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(rentDVDEndpoint)
+		rentDVDEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(rentDVDEndpoint)
+		rentDVDEndpoint = opentracing.TraceClient(ot, "rent_dvd")(rentDVDEndpoint)
+	}
 	return DVDEndpoints{
 		CreateDVDEndpoint: createDVDEndpoint,
+		RentDVDEndpoint: rentDVDEndpoint,
 	}
 }

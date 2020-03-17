@@ -6,14 +6,17 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
+	"github.com/google/uuid"
 )
 
 var (
 	errInvalidDVDName = errors.New("invalid dvd name")
+	errInvalidDVDID   = errors.New("invalid DVD id")
 )
 
 type Service interface {
 	CreateDVD(ctx context.Context, name string) error
+	RentDVD(ctx context.Context, id string) error
 }
 
 type dvdService struct {
@@ -45,4 +48,16 @@ func (d *dvdService) CreateDVD(ctx context.Context, name string) error {
 	}
 
 	return d.repo.Store(dvd)
+}
+
+func (d *dvdService) RentDVD(ctx context.Context, id string) error {
+	if id == "" {
+		return errInvalidDVDID
+	}
+	_, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+	
+	return d.repo.Update(id, NotAvailable)
 }

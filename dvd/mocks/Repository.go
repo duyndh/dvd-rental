@@ -25,3 +25,17 @@ func (_m *Repository) Store(_a0 *dvd.DVD) error {
 
 	return r0
 }
+
+// Update provides a mock function with given fields: id, status
+func (_m *Repository) Update(id string, status dvd.Status) error {
+	ret := _m.Called(id, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, dvd.Status) error); ok {
+		r0 = rf(id, status)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

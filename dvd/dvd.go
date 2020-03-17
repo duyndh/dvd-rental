@@ -36,6 +36,7 @@ type DVD struct {
 
 type Repository interface {
 	Store(dvd *DVD) error
+	Update(id string, status Status) error
 }
 
 //NewDVD generate a dvd model with input name

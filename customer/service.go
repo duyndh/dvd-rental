@@ -17,7 +17,7 @@ type Service interface {
 	//Register customer
 	Register(ctx context.Context, name, address string) error
 	// Customer rent a dvd
-	Rent(ctx context.Context, id string) error
+	Rent(ctx context.Context, customerID, dvdID string) error
 	//Customer buys a dvd
 	// Buy(ctx context.Context, id int) error
 	//Customer returns borrowed dvd
@@ -25,10 +25,10 @@ type Service interface {
 }
 
 //NewService return customerService with all expected function
-func NewService(customerRepo Repository, logger log.Logger, counter metrics.Counter, histogram metrics.Histogram) Service {
+func NewService(customerRepo Repository, logger log.Logger, counter metrics.Counter, histogram metrics.Histogram, dvdSvc ProxyService) Service {
 	var svc Service
 	{
-		svc = NewCustomerService(customerRepo)
+		svc = NewCustomerService(customerRepo, dvdSvc)
 		svc = NewLoggingService(logger)(svc)
 		svc = NewInstrumentService(counter, histogram)(svc)
 	}
@@ -37,12 +37,13 @@ func NewService(customerRepo Repository, logger log.Logger, counter metrics.Coun
 
 //customerService implement Service interface
 type customerService struct {
-	repo Repository
+	repo   Repository
+	dvdSvc ProxyService
 }
 
 //NewCustomerService init customer's service interface
-func NewCustomerService(customerRepo Repository) Service {
-	return &customerService{repo: customerRepo}
+func NewCustomerService(customerRepo Repository, dvdSvc ProxyService) Service {
+	return &customerService{customerRepo, dvdSvc}
 }
 
 func (c *customerService) Register(ctx context.Context, name, address string) error {
@@ -61,10 +62,13 @@ func (c *customerService) Register(ctx context.Context, name, address string) er
 
 }
 
-// //TODO: Need implement
-// func (c *customerService) Rent(ctx context.Context, id int) error {
-// 	return nil
-// }
+func (c *customerService) Rent(ctx context.Context, customerID, id string) error {
+	if err := c.dvdSvc.RentDVD(ctx, id); err != nil {
+		return err
+	}
+	//! Need creating record for customer-dvd
+	return nil
+}
 
 // //TODO: Need implement
 // func (c *customerService) Buy(ctx context.Context, id int) error {

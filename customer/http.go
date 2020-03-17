@@ -27,6 +27,20 @@ func decodeRegisterRequest(_ context.Context, r *http.Request) (interface{}, err
 	}, nil
 }
 
+func decodeRentRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var body struct {
+		CustomerID string `json:"customer_id"`
+		DVDID      string `json:"dvd_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+	return rentRequest{
+		CustomerID:    body.CustomerID,
+		DVDID: body.DVDID,
+	}, nil
+}
+
 type errorer interface {
 	error() error
 }
@@ -63,8 +77,17 @@ func MakeHandler(endpoints CustomerEndpoints, logger kitlog.Logger, ot stdopentr
 		encodeResponse,
 		append(opts, kithttp.ServerBefore(opentracing.HTTPToContext(ot, "register", logger)))...,
 	)
+
+	rentHandler := kithttp.NewServer(
+		endpoints.RentEndpoint,
+		decodeRentRequest,
+		encodeResponse,
+		append(opts, kithttp.ServerBefore(opentracing.HTTPToContext(ot, "rent", logger)))...,
+	)
+
 	r := mux.NewRouter()
 
 	r.Handle("/customer/v1/register", registerHandler)
+	r.Handle("/customer/v1/rent", rentHandler)
 	return r
 }

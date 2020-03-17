@@ -10,6 +10,8 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
+	"context"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
@@ -151,16 +153,24 @@ func main() {
 		}
 		cacheRepo := customerCache.NewCacheClient(cacheCli)
 
-		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{customer.Customer{},})
+		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{customer.Customer{}})
 		if err != nil {
 			logger.Log("init Db error: ", err)
 			os.Exit(1)
 		}
 		defer db.Close()
 		repo := customerRepo.NewCustomerRepository(svcCfg.Cache, db, cacheRepo)
-
+		conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(5*time.Second))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		defer conn.Close()
+		var dvdSvc customer.ProxyService
+		dvdSvc = customer.NewProxyMiddleware(conn, context.Background(), tracer, logger)(dvdSvc)
+		
 		var cs customer.Service
-		cs = customer.NewService(repo, logger, counter, historgram)
+		cs = customer.NewService(repo, logger, counter, historgram, dvdSvc)
 		customerEndpoint := customer.NewCustomerEndpoint(cs, tracer)
 
 		mux := http.NewServeMux()
@@ -175,7 +185,7 @@ func main() {
 		}
 		cacheRepo := dvdCache.NewCacheClient(cacheCli)
 
-		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{dvd.DVD{},})
+		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{dvd.DVD{}})
 		if err != nil {
 			logger.Log("init Db error: ", err)
 			os.Exit(1)
@@ -202,7 +212,7 @@ func main() {
 		if strings.ToUpper(*namespace) == "API" {
 			logger.Log("transport", "http", "address", *httpAddr, "msg", "listening")
 			errs <- http.ListenAndServe(*httpAddr, nil)
-		}else if strings.ToUpper(*namespace) == "SVC" {
+		} else if strings.ToUpper(*namespace) == "SVC" {
 			listener, err := net.Listen("tcp", *grpcAddr)
 			if err != nil {
 				logger.Log("net config error: ", err)
@@ -237,7 +247,7 @@ func accessControl(h http.Handler) http.Handler {
 
 func initDB(addr, username, password, database string, models []interface{}) (*pg.DB, error) {
 
-	db :=  pg.Connect(&pg.Options{
+	db := pg.Connect(&pg.Options{
 		Addr:     addr,
 		User:     username,
 		Password: password,
@@ -264,7 +274,7 @@ func initDB(addr, username, password, database string, models []interface{}) (*p
 		fmt.Printf("Creating model:%+v ... \n", model)
 		if err := db.CreateTable(model, &orm.CreateTableOptions{
 			FKConstraints: true,
-			IfNotExists: true,
+			IfNotExists:   true,
 		}); err != nil {
 			return nil, err
 		}

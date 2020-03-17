@@ -1,9 +1,15 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/go-pg/pg/v9"
 	"github.com/ngray1747/dvd-rental/dvd"
 	"github.com/ngray1747/dvd-rental/internal/config"
+)
+
+var (
+	errDVDNotAvailable = errors.New("dvd not available")
 )
 
 type Cache interface {
@@ -49,10 +55,16 @@ func (cr *dvdRepository) Update(id string, status dvd.Status) error {
 	if err := tx.Model(d).Where("id = ?", id).Select(); err != nil {
 		return err
 	}
+	
+	if d.Status == dvd.NotAvailable {
+		return errDVDNotAvailable
+	}
+
 	d.Status = status
 	if err := tx.Update(d); err != nil {
 		return err
 	}
+	
 	if err := cr.cache.StoreToCache(cr.cfg.CacheKey, *d); err != nil {
 		return err
 	}

@@ -16,8 +16,8 @@ var (
 type Service interface {
 	//Register customer
 	Register(ctx context.Context, name, address string) error
-	//Customer rent a dvd
-	// Rent(ctx context.Context, id int) error
+	// Customer rent a dvd
+	Rent(ctx context.Context, id string) error
 	//Customer buys a dvd
 	// Buy(ctx context.Context, id int) error
 	//Customer returns borrowed dvd

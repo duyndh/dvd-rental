@@ -4,7 +4,7 @@ package pb;
 
 service DVDRental {
     rpc CreateDVD (CreateDVDRequest) returns (CreateDVDResponse);
-    // rpc RentDVD (RentDVDRequest) returns (RenDVDResponse);
+    rpc RentDVD (RentDVDRequest) returns (RentDVDResponse);
     // rpc ReturnsDVD (ReturnsDVDRequest) returns (ReturnsDVDResponse);
 }
 
@@ -13,5 +13,13 @@ message CreateDVDRequest {
 }
 
 message CreateDVDResponse {
+    string err = 1;
+}
+
+message RentDVDRequest {
+    string id = 1;
+}
+
+message RentDVDResponse {
     string err = 1;
 }

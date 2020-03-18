@@ -63,7 +63,7 @@ func (c *customerService) Register(ctx context.Context, name, address string) er
 }
 
 func (c *customerService) Rent(ctx context.Context, customerID, id string) error {
-	if err := c.dvdSvc.RentDVD(ctx, id); err != nil {
+	if err := c.dvdSvc.UpdateDVDStatus(ctx, id); err != nil {
 		return err
 	}
 	//! Need creating record for customer-dvd

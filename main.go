@@ -153,7 +153,7 @@ func main() {
 		}
 		cacheRepo := customerCache.NewCacheClient(cacheCli)
 
-		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{customer.Customer{}})
+		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{&customer.Customer{}})
 		if err != nil {
 			logger.Log("init Db error: ", err)
 			os.Exit(1)
@@ -185,7 +185,7 @@ func main() {
 		}
 		cacheRepo := dvdCache.NewCacheClient(cacheCli)
 
-		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{dvd.DVD{}})
+		db, err := initDB(*dbAddr, *dbUserName, *dbPassword, svcCfg.Database.DBName, []interface{}{&dvd.DVD{}})
 		if err != nil {
 			logger.Log("init Db error: ", err)
 			os.Exit(1)
@@ -267,18 +267,17 @@ func initDB(addr, username, password, database string, models []interface{}) (*p
 		if err != nil {
 			return nil, err
 		}
-	}
-	fmt.Println("Database already existed. Abort migration")
-
-	for _, model := range models {
-		fmt.Printf("Creating model:%+v ... \n", model)
-		if err := db.CreateTable(model, &orm.CreateTableOptions{
-			FKConstraints: true,
-			IfNotExists:   true,
-		}); err != nil {
-			return nil, err
+		for _, model := range models {
+			fmt.Printf("Creating model: %+v ... \n", model)
+			if err := db.CreateTable(model, &orm.CreateTableOptions{
+				FKConstraints: true,
+				IfNotExists:   true,
+			}); err != nil {
+				return nil, err
+			}
 		}
 	}
+	fmt.Println("Database already existed. Abort migration")
 
 	return db, nil
 }

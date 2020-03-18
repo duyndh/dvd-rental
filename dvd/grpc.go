@@ -74,7 +74,7 @@ func NewGRPCServer(endpoints DVDEndpoints, ot stdopentracing.Tracer, logger log.
 	rentDVDHandler := grpctransport.NewServer(
 		endpoints.RentDVDEndpoint,
 		decodeGRPCRentDVDRequest,
-		encodeGRPCCreateDVDResponse,
+		encodeGRPCRentDVDResponse,
 		append(opts, grpctransport.ServerBefore(opentracing.GRPCToContext(ot, "rent DVD", logger)))...,
 	)
 	

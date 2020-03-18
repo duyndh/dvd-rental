@@ -1,7 +1,10 @@
 SERVICE_NAME := customer
 IMAGE_NAME := ndhduy7798/dvd_rental_$(SERVICE_NAME)
-
-
+zipkinAddr := localhost:32770
+dbHost := localhost:32768
+dbUserName := my_user
+dbPassword := dbPassword
+redisAddr := localhost:32769
 #* Build
 build:
 	@echo "--> Buildding image"
@@ -15,6 +18,10 @@ build:
 build-go:
 	@echo "--> Building go"
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./build/main main.go	
+run-customer:
+	go run main.go -zipkinAddr=${zipkinAddr} -dbHost=${dbHost} -dbUserName={my_user} -dbPassword=${dbPassword} -redisAddr=${redisAddr} -service=customer -namespace=api -grpcAddr=localhost:8888
+run-dvd:
+	go run main.go -zipkinAddr=${zipkinAddr} -dbHost=${dbHost} -dbUserName={my_user} -dbPassword=${dbPassword} -redisAddr=${redisAddr} -service=dvd -namespace=svc
 
 #! Testing
 test:

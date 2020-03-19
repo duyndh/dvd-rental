@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/dockertest"
 	"github.com/go-redis/redis/v7"
-	"github.com/stretchr/testify/assert"
 	"github.com/ngray1747/dvd-rental/customer"
 	"github.com/ngray1747/dvd-rental/customer/cache"
+	"github.com/ngray1747/dvd-rental/internal/model"
+	"github.com/ory/dockertest"
+	"github.com/stretchr/testify/assert"
 )
 
 var db *redis.Client
@@ -61,10 +62,12 @@ func TestStoreToCache(t *testing.T) {
 			args: args{
 				key: "customers",
 				customer: customer.Customer{
-					ID:        "66d112da-07e3-41de-bce3-86fe2bd52b24",
+					Base: model.Base{
+						ID:        "66d112da-07e3-41de-bce3-86fe2bd52b24",
+						CreatedAt: time.Now(),
+					},
 					Name:      "Duy Nguyen",
 					Address:   "1102 Truong Sa Street",
-					CreatedAt: time.Now(),
 				},
 			},
 			wantErr: false,

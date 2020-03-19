@@ -5,6 +5,7 @@ import (
 	"github.com/go-redis/redis/v7"
 	"github.com/ngray1747/dvd-rental/customer"
 	"github.com/ngray1747/dvd-rental/internal/config"
+	"github.com/ngray1747/dvd-rental/internal/model"
 )
 
 //Cache provides access to customer cache
@@ -47,7 +48,11 @@ func (cr *customerRepository) GetByID(id string) (*customer.Customer, error) {
 	if err != nil && err != redis.Nil {
 		return nil, err
 	} else if err == redis.Nil {
-		cus = &customer.Customer{ID: id}
+		cus = &customer.Customer{
+			Base: model.Base{
+				ID: id,
+			},
+		}
 		// Get from database
 		if err := cr.db.Select(cus); err != nil {
 			return nil, err

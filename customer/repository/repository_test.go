@@ -13,6 +13,7 @@ import (
 	"github.com/ngray1747/dvd-rental/customer/cache"
 	"github.com/ngray1747/dvd-rental/customer/repository"
 	"github.com/ngray1747/dvd-rental/internal/config"
+	"github.com/ngray1747/dvd-rental/internal/model"
 	"github.com/ory/dockertest"
 	"github.com/stretchr/testify/assert"
 )
@@ -99,7 +100,9 @@ func TestStore(t *testing.T) {
 			name: "OK",
 			args: args{
 				customer: &customer.Customer{
-					ID:      "18eb0b6e-8757-4dfb-b062-1c7944e2b8f7",
+					Base: model.Base{
+						ID:      "18eb0b6e-8757-4dfb-b062-1c7944e2b8f7",
+					},
 					Name:    "Duy Nguyen",
 					Address: "1102 Truong Sa Street",
 				},

@@ -49,9 +49,8 @@ services:
     # image: dvd_rental:latest
     build: 
       args: 
-        # - HTTP_ADDR=localhost:9999
         - REDIS_URL=redis:6379
-        # - REDIS_PASSWORD=
+        - GRPCADDR=dvd_rental_dvd:8888
         - POSTGRESQL_URL=db:5432
         - POSTGRESQL_USERNAME=my_user
         - POSTGRESQL_PASSWORD=password123
